@@ -1,10 +1,25 @@
-# lean-compose
+<a name="readme-top"></a>
 
-A typed DSL for authoring Compose UI in Lean, in the manner of
-[lean-html](https://github.com/paulbutcher/lean-html).
+<div align="center">
+  <h3 align="center">lean-compose</h3>
 
-The idea is the same: index the view type by where it is allowed to appear, so that
-invalid nesting is a type error rather than a layout bug noticed on a screen.
+  <p align="center">
+    🎨 A typed DSL for authoring Compose UI in Lean 4 ✨
+    <br/>
+
+   ![Written in Lean][language-shield]
+   [![Apache 2.0 License][license-shield]][license-url]
+   [![Contributors Welcome][contributors-shield]][contributors-url]
+
+  </p>
+</div>
+
+## Overview
+
+`lean-compose` describes Jetpack Compose layouts in Lean, following
+[lean-html](https://github.com/paulbutcher/lean-html)'s treatment of HTML content
+models: the view type is indexed by where a view is allowed to appear, so invalid
+nesting is a type error rather than a layout bug noticed on a screen.
 
 ```lean
 def demoScreen (count : Nat) : View .content :=
@@ -30,47 +45,71 @@ has type
 Compose itself makes no such distinction: any `@Composable` nests inside any other,
 and a slot expecting a bar will accept a button and lay it out wrongly.
 
-## What is modelled
+- [x] Content-model categories: `.content`, `.topBar`, `.navItem`
+- [x] Renders to JSON for a host to interpret
+- [x] Nothing `partial`, nothing that can panic, no `sorry`, builds with `warningAsError`
 
-`Category` carries the distinctions that matter at the boundary: `.content` for
-anything that goes in a column, row or box; `.topBar` for the one thing a `Scaffold`
-accepts as a bar; `.navItem` for navigation children. Sibling *ordering* is
-deliberately not modelled, the same choice lean-html makes for HTML5.
+## Getting Started
 
-`View`'s constructor is private, so the only way to obtain one is through the
-constructors in `Compose/Views.lean`, which is what keeps the index meaningful.
+The only hard dependency is Lean 4.
 
-## Rendering
+```bash
+lake build
+lake test
+```
 
-`View.toJson` emits a tree for a host to interpret. JSON rather than generated
-Kotlin, so a UI can change without recompiling the app around it.
+To use it in your own package, add to `lakefile.toml`:
+
+```toml
+[[require]]
+name = "lean-compose"
+git = "https://github.com/saviorand/lean-compose"
+```
+
+## How it renders
+
+`View.toJson` emits a tree for a host to interpret, rather than generating Kotlin, so
+a UI can change without recompiling the app around it.
 [lean-android-compose](https://github.com/saviorand/lean-android-compose) has a
 `LeanView.kt` that turns this into real Composables.
 
 `toJson` and `childrenJson` are mutually recursive rather than using a nested
-`List.map`, because a closure hides the recursive call from the structural
-termination checker. Nothing here is `partial` and nothing can panic.
+`List.map`: a closure hides the recursive call from Lean's structural termination
+checker.
 
 ## Tests
 
-Structural facts are theorems (`bar_is_topBar`, `coe_string_is_text`,
-`nesting_preserved`, `scaffold_no_bar`). The string-level facts are runtime checks
-instead: `escape` and `toJson` are built from `String.foldl` and append, neither of
-which reduces definitionally, `simp` on a whole document exhausts the heartbeat
-limit, and `native_decide` would close them only by adding a trusted axiom for what
-is really an output-format check.
+Structural facts are theorems. The string-level ones are runtime checks instead:
+`escape` and `toJson` are built from `String.foldl` and append, neither of which
+reduces definitionally, `simp` on a whole document exhausts the heartbeat limit, and
+`native_decide` would close them only by adding a trusted axiom for what is really an
+output-format check.
 
-```
-lake build && lake test
-```
+## Roadmap
 
-## Status
+- [ ] More of the Compose surface: lazy lists, text fields, images
+- [ ] Ordering constraints within a parent, which are currently unmodelled
+- [ ] Render on-device rather than at build time, so layouts can depend on runtime
+      state; the export is in place but the host-side path
+      [currently crashes](https://github.com/saviorand/lean-android-compose)
 
-The DSL, the renderer and the tests all work. `Compose/Demo.lean` renders a screen
-that has been shown on an Android device via
-[lean-android-compose](https://github.com/saviorand/lean-android-compose).
+## Contributing
 
-This library is host-agnostic: it produces JSON and knows nothing about Android,
-JNI or Kotlin. `demoScreenJson` is marked `@[export lean_demo_screen_json]` so that
-a host which has cross-compiled Lean can call it directly rather than generating
-the tree ahead of time.
+Contributions are welcome, particularly new node kinds and the theorems that should
+accompany them.
+
+## License
+
+Distributed under the Apache 2.0 License. See [LICENSE](LICENSE) for more information.
+
+## Acknowledgments
+
+* [lean-html](https://github.com/paulbutcher/lean-html) and
+  [lean-htmx](https://github.com/paulbutcher/lean-htmx), whose approach this follows
+
+<!-- MARKDOWN LINKS & IMAGES -->
+[language-shield]: https://img.shields.io/badge/language-lean4-blueviolet
+[license-shield]: https://img.shields.io/github/license/saviorand/lean-compose?logo=github
+[license-url]: https://github.com/saviorand/lean-compose/blob/main/LICENSE
+[contributors-shield]: https://img.shields.io/badge/contributors-welcome!-blue
+[contributors-url]: https://github.com/saviorand/lean-compose#contributing
