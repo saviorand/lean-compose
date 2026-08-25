@@ -71,7 +71,8 @@ git = "https://github.com/saviorand/lean-compose"
 `View.toJson` emits a tree for a host to interpret rather than generating Kotlin, so
 a UI can change without recompiling the application around it.
 [lean-android-compose](https://github.com/saviorand/lean-android-compose) provides a
-`LeanView.kt` that turns this into real Composables.
+`LeanView.kt` that turns this into real Composables, and calls into this library
+on-device so a layout can depend on runtime state.
 
 `toJson` and `childrenJson` are mutually recursive rather than using a nested
 `List.map`, since a closure hides the recursive call from Lean's structural
@@ -89,9 +90,8 @@ is really an output-format check.
 
 - [ ] More of the Compose surface: lazy lists, text fields, images
 - [ ] Ordering constraints within a parent, currently unmodelled
-- [ ] Render on-device rather than at build time, so layouts can depend on runtime
-      state. The export is in place, but the host-side path
-      [still crashes](https://github.com/saviorand/lean-android-compose)
+- [ ] A host that reloads trees at runtime, so a screen can change without shipping
+      a new build
 
 ## Contributing
 
